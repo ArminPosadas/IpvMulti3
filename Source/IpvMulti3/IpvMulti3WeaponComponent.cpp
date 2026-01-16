@@ -16,6 +16,7 @@
 // Sets default values for this component's properties
 UIpvMulti3WeaponComponent::UIpvMulti3WeaponComponent()
 {
+	SetIsReplicatedByDefault(true);
 	// Default offset from the character location for projectiles to spawn
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 }
@@ -23,10 +24,14 @@ UIpvMulti3WeaponComponent::UIpvMulti3WeaponComponent()
 
 void UIpvMulti3WeaponComponent::Fire()
 {
-	if (Character == nullptr || Character->GetController() == nullptr)
+	/*if (GetOwnerRole() < ROLE_Authority)
 	{
+		ServerFire();
 		return;
-	}
+	}*/
+
+	if (Character == nullptr)
+		return;
 
 	// Try and fire a projectile
 	if (ProjectileClass != nullptr)
@@ -42,6 +47,8 @@ void UIpvMulti3WeaponComponent::Fire()
 			//Set Spawn Collision Handling Override
 			FActorSpawnParameters ActorSpawnParams;
 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+
+			ActorSpawnParams.Instigator = Character;
 	
 			// Spawn the projectile at the muzzle
 			World->SpawnActor<AIpvMulti3Projectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
@@ -98,6 +105,61 @@ bool UIpvMulti3WeaponComponent::AttachWeapon(AIpvMulti3Character* TargetCharacte
 
 	return true;
 }
+
+void UIpvMulti3WeaponComponent::MulticastFireFX_Implementation()
+{
+	// Sound
+	if (FireSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			FireSound,
+			Character->GetActorLocation()
+		);
+	}
+
+	// Animation (1st person only)
+	if (Character->IsLocallyControlled() && FireAnimation)
+	{
+		if (UAnimInstance* Anim = Character->GetMesh1P()->GetAnimInstance())
+		{
+			Anim->Montage_Play(FireAnimation, 1.f);
+		}
+	}
+}
+
+
+void UIpvMulti3WeaponComponent::ServerFire_Implementation()
+{
+	if (!ProjectileClass || !Character) return;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	APlayerController* PC = Cast<APlayerController>(Character->GetController());
+	if (!PC) return;
+
+	const FRotator SpawnRotation = PC->PlayerCameraManager->GetCameraRotation();
+	const FVector SpawnLocation =
+		Character->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
+
+	FActorSpawnParameters Params;
+	Params.Owner = Character;
+	Params.Instigator = Character;
+	Params.SpawnCollisionHandlingOverride =
+		ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+
+	World->SpawnActor<AIpvMulti3Projectile>(
+		ProjectileClass,
+		SpawnLocation,
+		SpawnRotation,
+		Params
+	);
+
+	// Tell everyone to play visuals
+	MulticastFireFX();
+}
+
 
 void UIpvMulti3WeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {

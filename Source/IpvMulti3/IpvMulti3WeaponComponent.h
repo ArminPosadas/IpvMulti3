@@ -50,6 +50,12 @@ public:
 	void Fire();
 
 protected:
+
+	UFUNCTION(Server, Reliable)
+	void ServerFire();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastFireFX();
 	/** Ends gameplay for this component. */
 	UFUNCTION()
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;

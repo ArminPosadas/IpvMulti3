@@ -59,6 +59,7 @@ protected:
 	// APawn interface
 	virtual void NotifyControllerChanged() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
+	
 	// End of APawn interface
 
 public:
@@ -67,5 +68,8 @@ public:
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="IA")
+	UPawnNoiseEmitterComponent* PawnNoiseEmitterComp;
 };
 
