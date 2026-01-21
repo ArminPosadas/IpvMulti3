@@ -68,6 +68,9 @@ public:
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+	UPROPERTY(BlueprintReadOnly, Category="Gameplay")
+	bool bIsCarryingObjective;
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="IA")
 	UPawnNoiseEmitterComponent* PawnNoiseEmitterComp;

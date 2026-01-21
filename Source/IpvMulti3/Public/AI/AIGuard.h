@@ -1,11 +1,18 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "AIGuard.generated.h"
 class UPawnSensingComponent;
+
+UENUM(BlueprintType)
+enum class EIAState : uint8
+{
+	Idle,
+	Suspicious,
+	Alerted
+};
+
 UCLASS()
 class IPVMULTI3_API AAIGuard : public ACharacter
 {
@@ -14,6 +21,8 @@ class IPVMULTI3_API AAIGuard : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AAIGuard();
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -43,4 +52,16 @@ protected:
 	void ResetOrientation();
 
 	FTimerHandle TimerHandle_ResetOrientation;
+
+	//Guard State
+	UPROPERTY(ReplicatedUsing=OnRep_GuardState)
+	EIAState GuardState;
+
+	UFUNCTION()
+	void OnRep_GuardState();
+	
+	void SetGuardState(EIAState NewState);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "AIGuard")
+	void OnStateChanged(EIAState NewState);
 };

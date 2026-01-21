@@ -12,6 +12,7 @@
 #include "Animation/AnimInstance.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
+#include "Player/IpvMulti3PlayerController.h"
 
 // Sets default values for this component's properties
 UIpvMulti3WeaponComponent::UIpvMulti3WeaponComponent()
@@ -24,14 +25,11 @@ UIpvMulti3WeaponComponent::UIpvMulti3WeaponComponent()
 
 void UIpvMulti3WeaponComponent::Fire()
 {
-	/*if (GetOwnerRole() < ROLE_Authority)
-	{
-		ServerFire();
-		return;
-	}*/
 
-	if (Character == nullptr)
+	if (Character == nullptr || Character->GetController() == nullptr)
+	{
 		return;
+	}
 
 	// Try and fire a projectile
 	if (ProjectileClass != nullptr)
@@ -39,7 +37,7 @@ void UIpvMulti3WeaponComponent::Fire()
 		UWorld* const World = GetWorld();
 		if (World != nullptr)
 		{
-			APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
+			AIpvMulti3PlayerController* PlayerController = Cast<AIpvMulti3PlayerController>(Character->GetController());
 			const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
 			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 			const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
@@ -71,6 +69,8 @@ void UIpvMulti3WeaponComponent::Fire()
 			AnimInstance->Montage_Play(FireAnimation, 1.f);
 		}
 	}
+
+	OnFireWeaponDelegate.Broadcast(this);
 }
 
 bool UIpvMulti3WeaponComponent::AttachWeapon(AIpvMulti3Character* TargetCharacter)
@@ -88,7 +88,7 @@ bool UIpvMulti3WeaponComponent::AttachWeapon(AIpvMulti3Character* TargetCharacte
 	AttachToComponent(Character->GetMesh1P(), AttachmentRules, FName(TEXT("GripPoint")));
 
 	// Set up action bindings
-	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
+	if (AIpvMulti3PlayerController* PlayerController = Cast<AIpvMulti3PlayerController>(Character->GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
@@ -136,7 +136,7 @@ void UIpvMulti3WeaponComponent::ServerFire_Implementation()
 	UWorld* World = GetWorld();
 	if (!World) return;
 
-	APlayerController* PC = Cast<APlayerController>(Character->GetController());
+	AIpvMulti3PlayerController* PC = Cast<AIpvMulti3PlayerController>(Character->GetController());
 	if (!PC) return;
 
 	const FRotator SpawnRotation = PC->PlayerCameraManager->GetCameraRotation();
@@ -167,7 +167,7 @@ void UIpvMulti3WeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason
 	if (Character != nullptr)
 	{
 		// remove the input mapping context from the Player Controller
-		if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
+		if (AIpvMulti3PlayerController* PlayerController = Cast<AIpvMulti3PlayerController>(Character->GetController()))
 		{
 			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 			{

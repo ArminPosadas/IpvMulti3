@@ -8,6 +8,8 @@
 
 class AIpvMulti3Character;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFireWeapon, UIpvMulti3WeaponComponent*, WeaponComponent);
+
 UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class IPVMULTI3_API UIpvMulti3WeaponComponent : public USkeletalMeshComponent
 {
@@ -48,6 +50,9 @@ public:
 	/** Make the weapon Fire a Projectile */
 	UFUNCTION(BlueprintCallable, Category="Weapon")
 	void Fire();
+
+	UPROPERTY(BlueprintAssignable)
+	FOnFireWeapon OnFireWeaponDelegate;
 
 protected:
 

@@ -1,12 +1,9 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #include "IpvMulti3Projectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 
 AIpvMulti3Projectile::AIpvMulti3Projectile() 
 {
-	bReplicates = true;
 	
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
@@ -20,6 +17,11 @@ AIpvMulti3Projectile::AIpvMulti3Projectile()
 
 	// Set as root component
 	RootComponent = CollisionComp;
+
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		CollisionComp->OnComponentHit.AddDynamic(this, &AIpvMulti3Projectile::OnHit);
+	}
 
 	// Use a ProjectileMovementComponent to govern this projectile's movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
